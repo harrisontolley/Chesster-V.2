@@ -7,20 +7,20 @@ import numpy
 stockfish_path = "./stockfish/stockfish.exe"
 
 
-# # this function will create our x (board)
-# def random_board(max_depth=200):
-#     board = chess.Board()
-#     depth = random.randrange(0, max_depth)
+# this function will create our x (board)
+def random_board(max_depth=200):
+    board = chess.Board()
+    depth = random.randrange(0, max_depth)
 
-#     for _ in range(depth):
-#         all_moves = list(board.legal_moves)
-#         random_move = random.choice(all_moves)
-#         board.push(random_move)
+    for _ in range(depth):
+        all_moves = list(board.legal_moves)
+        random_move = random.choice(all_moves)
+        board.push(random_move)
 
-#         if board.is_game_over():
-#             break
+        if board.is_game_over():
+            break
 
-#     return board
+    return board
 
 
 def stockfish(board, depth):
@@ -43,9 +43,9 @@ def stockfish(board, depth):
         return score
 
 
-# board = random_board(500)
-# print(board)
-# print(stockfish(board, 10))
+# # board = random_board(500)
+# # print(board)
+# # print(stockfish(board, 10))
 
 squares_index = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
 
@@ -85,76 +85,76 @@ def split_dims(board):
     return board3d
 
 
-# import tensorflow.keras.models as models
-# import tensorflow.keras.layers as layers
-# import tensorflow.keras.optimizers as optimizers
-# import tensorflow.keras.utils as utils
+import tensorflow.keras.models as models
+import tensorflow.keras.layers as layers
+import tensorflow.keras.optimizers as optimizers
+import tensorflow.keras.utils as utils
 
 
-# def build_model(conv_size, conv_depth):
-#     board3d = layers.Input(shape=(14, 8, 8))  # 14 planes of 8x8
+def build_model(conv_size, conv_depth):
+    board3d = layers.Input(shape=(14, 8, 8))  # 14 planes of 8x8
 
-#     x = board3d
-#     for _ in range(conv_depth):
-#         x = layers.Conv2D(
-#             filters=conv_size, kernel_size=3, padding="same", activation="relu"
-#         )(x)
-#     x = layers.Flatten()(x)
-#     x = layers.Dense(64, activation="relu")(x)
-#     x = layers.Dense(1, activation="sigmoid")(x)
+    x = board3d
+    for _ in range(conv_depth):
+        x = layers.Conv2D(
+            filters=conv_size, kernel_size=3, padding="same", activation="relu"
+        )(x)
+    x = layers.Flatten()(x)
+    x = layers.Dense(64, activation="relu")(x)
+    x = layers.Dense(1, activation="sigmoid")(x)
 
-#     return models.Model(inputs=board3d, outputs=x)
+    return models.Model(inputs=board3d, outputs=x)
 
 
-# model = build_model(32, 4)
-# print(model.summary())
+model = build_model(32, 4)
+print(model.summary())
 # utils.plot_model(model, to_file="model.png", show_shapes=True, show_layer_names=True)
 
 
-# def build_model_residual(conv_size, conv_depth):
-#     board3d = layers.Input(shape=(14, 8, 8))  # 14 planes of 8x8
+def build_model_residual(conv_size, conv_depth):
+    board3d = layers.Input(shape=(14, 8, 8))  # 14 planes of 8x8
 
-#     # adding the conv layers
-#     x = layers.Conv2D(
-#         filters=conv_size, kernel_size=3, padding="same", data_format="channels_first"
-#     )(board3d)
-#     for _ in range(conv_depth):
-#         previous_x = x
-#         x = layers.Conv2D(
-#             filters=conv_size,
-#             kernel_size=3,
-#             padding="same",
-#             data_format="channels_first",
-#         )(x)
-#         x = layers.BatchNormalization()(x)
-#         x = layers.Activation("relu")(x)
-#         x = layers.Conv2D(
-#             filters=conv_size,
-#             kernel_size=3,
-#             padding="same",
-#             data_format="channels_first",
-#         )(x)
-#         x = layers.BatchNormalization()(x)
-#         x = layers.Add()([x, previous_x])
-#         x = layers.Activation("relu")(x)
-#     x = layers.Flatten()(x)
-#     x = layers.Dense(1, activation="sigmoid")(x)
+    # adding the conv layers
+    x = layers.Conv2D(
+        filters=conv_size, kernel_size=3, padding="same", data_format="channels_first"
+    )(board3d)
+    for _ in range(conv_depth):
+        previous_x = x
+        x = layers.Conv2D(
+            filters=conv_size,
+            kernel_size=3,
+            padding="same",
+            data_format="channels_first",
+        )(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Activation("relu")(x)
+        x = layers.Conv2D(
+            filters=conv_size,
+            kernel_size=3,
+            padding="same",
+            data_format="channels_first",
+        )(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.Add()([x, previous_x])
+        x = layers.Activation("relu")(x)
+    x = layers.Flatten()(x)
+    x = layers.Dense(1, activation="sigmoid")(x)
 
-#     return models.Model(inputs=board3d, outputs=x)
-
-
-# import tensorflow.keras.callbacks as callbacks
+    return models.Model(inputs=board3d, outputs=x)
 
 
-# def get_dataset():
-#     container = numpy.load("chess_data.npz")
-#     b, v = container["b"], container["v"]
-#     v = numpy.asarray(v / abs(v).max() / 2 + 0.5, dtype=numpy.float32)  # -1..1 -> 0..1
-#     return b, v
+import tensorflow.keras.callbacks as callbacks
+
+
+def get_dataset():
+    container = numpy.load("chess_data.npz")
+    b, v = container["b"], container["v"]
+    v = numpy.asarray(v / abs(v).max() / 2 + 0.5, dtype=numpy.float32)  # -1..1 -> 0..1
+    return b, v
 
 
 # x_train, y_train = get_dataset()
-# print(x_train.shape, y_train.shape)
+# # print(x_train.shape, y_train.shape)
 
 # model.compile(optimizer="adam", loss="mean_squared_error")
 # model.summary()
@@ -162,7 +162,7 @@ def split_dims(board):
 #     x_train,
 #     y_train,
 #     batch_size=2048,
-#     epochs=1000,
+#     epochs=20,
 #     verbose=1,
 #     validation_split=0.1,
 #     callbacks=[
@@ -176,7 +176,7 @@ def split_dims(board):
 # def minimax_eval(board):
 #     board3d = split_dims(board)
 #     board3d = numpy.expand_dims(board3d, 0)
-#     return model.predict(board3d)[0][0]
+#     return model.predict(board3d, verbose=0)[0][0]
 
 
 # def minimax(board, depth, alpha, beta, maximising_player):
@@ -225,12 +225,13 @@ def split_dims(board):
 
 # board = chess.Board()
 
+# start = time.time()
 # with chess.engine.SimpleEngine.popen_uci(stockfish_path) as sf:
 #     while not board.is_game_over():
 #         # AI Move
 #         ai_move = get_ai_move(board, 1)
 #         board.push(ai_move)
-#         print(f"\n{board}")
+#         # print(f"\n{board}")
 #         if board.is_game_over():
 #             break
 
@@ -241,3 +242,8 @@ def split_dims(board):
 #         ]  # Get the first move from the principal variation
 #         board.push(stockfish_move)
 #         print(f"\n{board}")
+#         print("-----------------------------------------")
+
+# end = time.time()
+# print("Time taken:", end - start)
+# print("Result:", board.result())
