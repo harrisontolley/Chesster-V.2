@@ -4,51 +4,84 @@ File that preprocesses the data into a form that can be used by the model traine
 import chess.pgn
 import numpy as np
 import time
+import concurrent.futures
+import threading
 
 from youtube import split_dims, stockfish
 
 
-def process_pgn_file(pgn_file_path, max_games=500, analysis_depth=3):
+def process_game(game, analysis_depth, transposition_table, lock):
     board_matrices = []
     evaluations = []
-    transposition_table = {}  # Transposition table to store board evaluations
-    game_count = 0
-    start = time.time()
+
+    if game is None or len(list(game.mainline_moves())) == 0:
+        return board_matrices, evaluations
+
+    board = game.board()
+    for move in game.mainline_moves():
+        board.push(move)
+        board_fen = board.fen()
+
+        with lock:  # Lock the following block of code
+            if board_fen in transposition_table:
+                evaluation = transposition_table[board_fen]
+                print("Found in transposition table:", evaluation)
+            else:
+                try:
+                    evaluation = stockfish(board, analysis_depth)
+                    if evaluation is None:
+                        evaluation = 0
+                    transposition_table[board_fen] = evaluation
+                    print("Evaluated:", evaluation)
+                except Exception as e:
+                    print("Error during analysis:", e)
+                    evaluation = 0
+
+        board_matrix = split_dims(board)
+        board_matrices.append(board_matrix)
+        evaluations.append(evaluation)
+
+    return board_matrices, evaluations
+
+
+def process_pgn_file(pgn_file_path, max_games=5000, analysis_depth=3, max_workers=10):
+    games_data = []
+    transposition_table = {}
+    lock = threading.Lock()
 
     with open(pgn_file_path) as pgn:
-        while game_count < max_games:
-            print(f"Processing game {game_count + 1}...")
-            game = chess.pgn.read_game(pgn)
-            if game is None:
-                break
+        games = [
+            chess.pgn.read_game(pgn)
+            for _ in range(max_games)
+            if chess.pgn.read_game(pgn) is not None
+        ]
 
-            board = game.board()
-            for move in game.mainline_moves():
-                board.push(move)
-                board_fen = board.fen()
-                if board_fen in transposition_table:
-                    # Use the stored evaluation if available
-                    evaluation = transposition_table[board_fen]
-                else:
-                    try:
-                        evaluation = stockfish(board, analysis_depth)
-                        if evaluation is None:
-                            evaluation = 0  # Default value for problematic positions
-                        transposition_table[board_fen] = evaluation
-                    except Exception as e:
-                        print("Error during analysis:", e)
-                        evaluation = 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_game = {
+            executor.submit(
+                process_game, game, analysis_depth, transposition_table, lock
+            ): game
+            for game in games
+        }
 
-                board_matrix = split_dims(board)
-                board_matrices.append(board_matrix)
-                evaluations.append(evaluation)
+        processed_games = 0
+        for future in concurrent.futures.as_completed(future_to_game):
+            game_data = future.result()
+            if game_data[0]:  # Only add data if it's not empty
+                games_data.append(game_data)
 
-            game_count += 1
+            processed_games += 1
+            print(f"Processed {processed_games}/{max_games} games.")
 
-    end = time.time()
-    print(f"Processed {game_count} games in {end - start} seconds.")
-    print(f"Average time per game: {(end - start) / game_count} seconds.")
-    return np.array(board_matrices), np.array(evaluations)
+    # Ensure that we have data to concatenate
+    if games_data:
+        board_matrices = np.concatenate([data[0] for data in games_data])
+        evaluations = np.concatenate([data[1] for data in games_data])
+    else:
+        board_matrices = np.array([])
+        evaluations = np.array([])
+
+    return board_matrices, evaluations
 
 
 # Main script
