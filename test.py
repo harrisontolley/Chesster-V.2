@@ -1,7 +1,7 @@
 import time
 import random
 
-from youtube import random_board, stockfish
+from data.youtube import random_board, stockfish
 
 
 print("generating boards...")
