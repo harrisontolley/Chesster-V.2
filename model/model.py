@@ -7,6 +7,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+NUM_FEATURES = 778  # number of features
+M = 256  # hidden layer size
+N = 256  # hidden layer size
+K = 1  # output size
+
+
 class NNUE(nn.Module):
     def __init__(self):
         super(NNUE, self).__init__()
