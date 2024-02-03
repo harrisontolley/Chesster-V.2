@@ -178,3 +178,4 @@ pyrightconfig.json
 # folders
 data/*
 stockfish/*
+stockfish-tools/*
