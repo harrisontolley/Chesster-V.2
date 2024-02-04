@@ -43,15 +43,3 @@ def find_best_move(board, depth):
             best_value = move_value
             best_move = move
     return best_move
-
-
-# Example usage
-board = chess.Board()
-
-print(board)
-start = time.time()
-best_move = find_best_move(board, 5)  # Adjust the depth as needed
-end = time.time()
-
-print("Best move:", best_move)
-print("Time taken:", end - start)
