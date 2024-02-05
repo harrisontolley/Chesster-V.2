@@ -176,6 +176,9 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 
 # folders
-data/*
+data/pipe/marlinflow/*
+data/pipe/plain/*
+data/binpacks/*
+data/bin/*
 stockfish/*
 stockfish-tools/*
