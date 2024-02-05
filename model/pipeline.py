@@ -40,7 +40,7 @@ def process_file(input_path, output_path):
 
 
 # Paths
-input_path = "model/pipe/unprocessed.plain"
+input_path = "model/pipe/1mildepth5.plain"
 output_path = "model/pipe/marlinflow.txt"
 
 # Process the file
