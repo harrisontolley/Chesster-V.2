@@ -7,8 +7,6 @@ Pipeline to preprocess the converted Stockfish generated files, in .plain format
 
 import os
 
-print(os.getcwd())
-
 
 def convert_result_to_wdl(result):
     """Converts game result to WDL format."""
