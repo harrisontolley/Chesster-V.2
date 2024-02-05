@@ -2,6 +2,9 @@
 Pipeline to preprocess the converted Stockfish generated files, in .plain format, into Marlinflow legacy format (fen | eval | wdl) 
 """
 
+# Place all files you wish to convert in the model/pipe/plain folder
+# Run this script to convert all files in the plain folder to the marlinflow folder
+
 import os
 
 
@@ -39,10 +42,20 @@ def process_file(input_path, output_path):
             output_file.write(f"{fen} | {score} | {wdl}\n")
 
 
-# Paths
-input_path = "model/pipe/1mildepth5.plain"
-output_path = "model/pipe/marlinflow.txt"
+def process_all_files(input_folder, output_folder):
+    for filename in os.listdir(input_folder):
+        if filename.endswith(".plain"):
+            input_path = os.path.join(input_folder, filename)
+            output_filename = filename.replace(".plain", ".txt")
+            output_path = os.path.join(output_folder, output_filename)
+            process_file(input_path, output_path)
+            print(f"Conversion completed for {filename}")
 
-# Process the file
-process_file(input_path, output_path)
-print("Conversion completed.")
+
+# Paths to the input and output folders
+input_folder = "model/pipe/plain"
+output_folder = "model/pipe/marlinflow"
+
+# Process all the files
+process_all_files(input_folder, output_folder)
+print("Conversions completed.")
