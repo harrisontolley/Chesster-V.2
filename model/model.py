@@ -4,12 +4,11 @@ File that holds the Efficiently updatable neural network architecture for the mo
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
-NUM_FEATURES = 778  # number of features
-M = 256  # hidden layer size
-N = 256  # hidden layer size
+NUM_FEATURES = 768  # number of features
+M = 8  # hidden layer size
+N = 8  # hidden layer size
 K = 1  # output size
 
 
