@@ -6,7 +6,6 @@ HIDDEN_SIZE = 16
 INPUT_SIZE = 768
 OUTPUT_SIZE = 1
 SCALE = 400
-QA = 255
 
 
 class SimpleNNUE(nn.Module):
@@ -21,7 +20,7 @@ class SimpleNNUE(nn.Module):
         them_transformed = self.crelu(self.feature_transformer(them))
         concatenated = torch.cat((us_transformed, them_transformed), dim=1)
         output = self.output_layer(concatenated)
-        output = output * SCALE / (QA * QA)
+        output = output * SCALE
         return output
 
 
