@@ -27,13 +27,6 @@ class SimpleNNUE(nn.Module):
 # Example of creating a network and evaluating a dummy input
 net = SimpleNNUE()
 
-# Dummy inputs for 'us' and 'them', replace with actual chess position features
-us_features = torch.randn(1, INPUT_SIZE)
-them_features = torch.randn(1, INPUT_SIZE)
-
-output = net(us_features, them_features)
-print(output)
-
 
 def load_model_params(model, params_path):
     # Assume params are stored as: (feature_transformer weights)(feature_transformer biases)(output_layer weights)...
@@ -62,6 +55,7 @@ def load_model_params(model, params_path):
 
 
 model = SimpleNNUE()
+
 load_model_params(model, "params.bin")
 
 print(model)
