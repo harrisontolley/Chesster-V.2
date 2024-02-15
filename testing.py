@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
-from chess_position_to_vector import chess_position_to_vector
+from chess_position_to_vector import chess_position_to_vector, validate_vector
 
 HIDDEN_SIZE = 16
 INPUT_SIZE = 768
@@ -46,7 +46,8 @@ def load_model_params(model, params_path):
     model.feature_transformer.weight.data = params[start:end].view(
         HIDDEN_SIZE, INPUT_SIZE
     )
-    start = end
+
+    start = end 
     end += HIDDEN_SIZE
     model.feature_transformer.bias.data = params[start:end]
 
@@ -78,11 +79,29 @@ chess_board = chess.Board()
 
 # convert to tensor
 vector = chess_position_to_vector(chess_board)
+validate_vector(vector, chess_board)
+print(vector)
 vector_np = np.array(vector)  # Convert list to numpy array
 position_features_tensor = torch.tensor(
     vector_np.reshape(1, INPUT_SIZE), dtype=torch.float32
 )
 
+
+evaluation = evaluate_position(model, position_features_tensor)
+print(f"Evaluation: {evaluation}")
+
+
+# load chess board from fen:
+chess_board = chess.Board("8/8/4P3/4K3/8/8/k7/8 b - - 0 1")
+
+
+# convert to tensor
+vector = chess_position_to_vector(chess_board)
+validate_vector(vector, chess_board)
+vector_np = np.array(vector)  # Convert list to numpy array
+position_features_tensor = torch.tensor(
+    vector_np.reshape(1, INPUT_SIZE), dtype=torch.float32
+)
 
 evaluation = evaluate_position(model, position_features_tensor)
 print(f"Evaluation: {evaluation}")

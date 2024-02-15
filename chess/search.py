@@ -1,7 +1,7 @@
 import chess
 import time
 
-from evaluate import evaluate
+from chess.evaluation.evaluate import evaluate
 
 
 def minimax(board, depth, alpha, beta, maximizing_player):
