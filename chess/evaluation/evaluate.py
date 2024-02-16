@@ -14,8 +14,6 @@ class Evaluation:
 
     endgame_material_start = ROOK_VALUE * 2 + BISHOP_VALUE + KNIGHT_VALUE
 
-
-
     def __init__(self):
         self.board = None  # Placeholder for board instance
         self.whiteEval = self.EvaluationData()
@@ -40,13 +38,13 @@ class Evaluation:
         """
         Returns the sum of material for the given color
         """
-        num_pawns = self.get_board().pieces(chess.PAWN, color)
-        num_knights = self.get_board().pieces(chess.KNIGHT, color)
-        num_bishops = self.get_board().pieces(chess.BISHOP, color)
-        num_queens = self.get_board().pieces(chess.QUEEN, color)
-        num_rooks = self.get_board().pieces(chess.ROOK, color)
-        my_pawns = self.get_board().pawns(color)
-        enemy_pawns = self.get_board().pawns(not color)
+        num_pawns = len(self.get_board().pieces(chess.PAWN, color))
+        num_knights = len(self.get_board().pieces(chess.KNIGHT, color))
+        num_bishops = len(self.get_board().pieces(chess.BISHOP, color))
+        num_queens = len(self.get_board().pieces(chess.QUEEN, color))
+        num_rooks = len(self.get_board().pieces(chess.ROOK, color))
+        my_pawns = len(self.get_board().pawns(color))
+        enemy_pawns = len(self.get_board().pawns(not color))
 
         return self.MaterialInfo(
             num_pawns,
@@ -133,3 +131,4 @@ class Evaluation:
 test = chess.Board()
 
 print(len(test.pieces(chess.KNIGHT, chess.WHITE)))
+
