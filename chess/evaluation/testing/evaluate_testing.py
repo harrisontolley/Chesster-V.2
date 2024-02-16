@@ -1,7 +1,12 @@
+import sys
+import os
 import unittest
 import chess
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from piece_square_tables import PieceSquareTables
+
 
 class TestPieceSquareTables(unittest.TestCase):
     def setUp(self):
