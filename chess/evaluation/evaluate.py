@@ -14,6 +14,56 @@ class Evaluation:
 
     endgame_material_start = ROOK_VALUE * 2 + BISHOP_VALUE + KNIGHT_VALUE
 
+
+
+    def __init__(self):
+        self.board = None  # Placeholder for board instance
+        self.whiteEval = self.EvaluationData()
+        self.blackEval = self.EvaluationData()
+
+    def get_board(self):
+        return self.board
+
+    def evaluate(self, board):
+        self.board = board
+        self.whiteEval = self.EvaluationData()
+        self.blackEval = self.EvaluationData()
+
+        # calculate material
+        whiteMaterialInfo = self.get_material_info(chess.WHITE)
+        blackMaterialInfo = self.get_material_info(chess.BLACK)
+
+        self.whiteEval.material_score = whiteMaterialInfo.material_score
+        self.blackEval.material_score = blackMaterialInfo.material_score
+
+    def get_material_info(self, color):
+        """
+        Returns the sum of material for the given color
+        """
+        num_pawns = self.get_board().pieces(chess.PAWN, color)
+        num_knights = self.get_board().pieces(chess.KNIGHT, color)
+        num_bishops = self.get_board().pieces(chess.BISHOP, color)
+        num_queens = self.get_board().pieces(chess.QUEEN, color)
+        num_rooks = self.get_board().pieces(chess.ROOK, color)
+        my_pawns = self.get_board().pawns(color)
+        enemy_pawns = self.get_board().pawns(not color)
+
+        return self.MaterialInfo(
+            num_pawns,
+            num_knights,
+            num_bishops,
+            num_queens,
+            num_rooks,
+            my_pawns,
+            enemy_pawns,
+        )
+
+    def evaluate_piece_square_tables(self, color, endgameT):
+        value = 0
+
+    def evaluate_piece_square_table():
+        pass
+
     class EvaluationData:
         def __init__(self):
             self.material_score = 0
@@ -78,43 +128,6 @@ class Evaluation:
             )
 
             self.endgameT = 1 - min(1, endgame_weight_sum / float(endgame_start_weight))
-
-    def __init__(self):
-        self.board = None  # Placeholder for board instance
-        self.white_eval = self.EvaluationData()
-        self.black_eval = self.EvaluationData()
-
-    def get_board(self):
-        return self.board
-
-    def evaluate(self, board):
-        self.board = board
-        self.white_eval = self.EvaluationData()
-        self.black_eval = self.EvaluationData()
-
-        # calculate white material
-
-    def get_material_info(self, color):
-        """
-        Returns the sum of material for the given color
-        """
-        num_pawns = self.get_board().pieces(chess.PAWN, color)
-        num_knights = self.get_board().pieces(chess.KNIGHT, color)
-        num_bishops = self.get_board().pieces(chess.BISHOP, color)
-        num_queens = self.get_board().pieces(chess.QUEEN, color)
-        num_rooks = self.get_board().pieces(chess.ROOK, color)
-        my_pawns = self.get_board().pawns(color)
-        enemy_pawns = self.get_board().pawns(not color)
-
-        return self.MaterialInfo(
-            num_pawns,
-            num_knights,
-            num_bishops,
-            num_queens,
-            num_rooks,
-            my_pawns,
-            enemy_pawns,
-        )
 
 
 test = chess.Board()
