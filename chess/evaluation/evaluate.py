@@ -1,7 +1,7 @@
 import chess
 from piece_square_tables import PieceSquareTables
 
-class Evaluation:
+class Evaluation():
     PAWN_VALUE = 100
     KNIGHT_VALUE = 300
     BISHOP_VALUE = 320
@@ -85,11 +85,34 @@ class Evaluation:
         value = 0
         for square in self.get_board().pieces(piece, color):
             value += self.piece_square_tables.read(table, color, square)
-            print("adding value: ", self.piece_square_tables.read(table, color, square))
-            print("from piece: ", piece, " at square: ", square, " for color: ", color)
-            print("value: ", value)
-            print("--------------------")
         return value
+    
+    def edge_distance(self, square):
+        """
+        Returns the distance from a square to the edge of the board
+        """
+        rank, file = divmod(square, 8)
+        return min(rank, 7 - rank, file, 7 - file)
+
+    def mop_up_eval(self, color, myMaterial: 'Evaluation.MaterialInfo', enemyMaterial: 'Evaluation.MaterialInfo'):
+        """
+        Returns the mop up score for the given color
+        """
+        if (myMaterial.material_score > enemyMaterial.material_score + PAWN_VALUE * 2) and enemyMaterial.endgameT > 0:
+            mopUpScore = 0
+
+            if color == chess.WHITE:
+                friendlyKingSquare = self.get_board().king(chess.WHITE)
+                enemyKingSquare = self.get_board().king(chess.BLACK)
+            else:
+                friendlyKingSquare = self.get_board().king(chess.BLACK)
+                enemyKingSquare = self.get_board().king(chess.WHITE)
+            
+            mopUpScore += (14 - chess.square_distance(friendlyKingSquare, enemyKingSquare)) * 4
+
+            mopUpScore += chess.square_manhattan_distance(chess.D4, enemyKingSquare) * 10
+            return mopUpScore * enemyMaterial.endgameT
+        return 0
 
 
     class EvaluationData:
@@ -133,7 +156,7 @@ class Evaluation:
             self.material_score = (
                 num_pawns * Evaluation.PAWN_VALUE
                 + num_knights * Evaluation.KNIGHT_VALUE
-                + num_bishops * Evaluation.BISHOP_VALUE
+                + num_bishops * Evaluation.BISHOP_VALUwE
                 + num_rooks * Evaluation.ROOK_VALUE
                 + num_queens * Evaluation.QUEEN_VALUE
             )
