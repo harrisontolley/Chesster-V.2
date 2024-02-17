@@ -1,5 +1,5 @@
 import chess
-
+from piece_square_tables import PieceSquareTables
 
 class Evaluation:
     PAWN_VALUE = 100
@@ -18,6 +18,7 @@ class Evaluation:
         self.board = None  # Placeholder for board instance
         self.whiteEval = self.EvaluationData()
         self.blackEval = self.EvaluationData()
+        self.piece_square_tables = PieceSquareTables()
 
     def get_board(self):
         return self.board
@@ -34,6 +35,9 @@ class Evaluation:
         self.whiteEval.material_score = whiteMaterialInfo.material_score
         self.blackEval.material_score = blackMaterialInfo.material_score
 
+        self.whiteEval.piece_square_score = self.evaluate_piece_square_tables(chess.WHITE, blackMaterialInfo.endgameT)
+        self.blackEval.piece_square_score = self.evaluate_piece_square_tables(chess.BLACK, whiteMaterialInfo.endgameT)
+
     def get_material_info(self, color):
         """
         Returns the sum of material for the given color
@@ -43,8 +47,8 @@ class Evaluation:
         num_bishops = len(self.get_board().pieces(chess.BISHOP, color))
         num_queens = len(self.get_board().pieces(chess.QUEEN, color))
         num_rooks = len(self.get_board().pieces(chess.ROOK, color))
-        my_pawns = len(self.get_board().pawns(color))
-        enemy_pawns = len(self.get_board().pawns(not color))
+        my_pawns = len(self.get_board().pieces(chess.PAWN, color))
+        enemy_pawns = len(self.get_board().pieces(chess.PAWN, not color))
 
         return self.MaterialInfo(
             num_pawns,
@@ -58,9 +62,35 @@ class Evaluation:
 
     def evaluate_piece_square_tables(self, color, endgameT):
         value = 0
+        colourIndex = 0 if color == chess.WHITE else 6
 
-    def evaluate_piece_square_table():
-        pass
+        # add the piece square table for the pieces for the given color
+        value += self.evaluate_piece_square_table(self.piece_square_tables.tables[colourIndex + chess.KNIGHT], color, chess.KNIGHT)
+        value += self.evaluate_piece_square_table(self.piece_square_tables.tables[colourIndex + chess.BISHOP], color, chess.BISHOP)
+        value += self.evaluate_piece_square_table(self.piece_square_tables.tables[colourIndex + chess.ROOK], color, chess.ROOK)
+        value += self.evaluate_piece_square_table(self.piece_square_tables.tables[colourIndex + chess.QUEEN], color, chess.QUEEN)
+
+        # interpolate between early and late game 
+        pawnEarlyGame = self.evaluate_piece_square_table(self.piece_square_tables.tables[colourIndex + chess.PAWN], color, chess.PAWN)
+        pawnsLateGame = self.evaluate_piece_square_table(self.piece_square_tables.tables[13 + (not color)], color, chess.PAWN)
+        value += pawnEarlyGame * (1 - endgameT) + pawnsLateGame * endgameT
+
+        kingEarlyGame = self.evaluate_piece_square_table(self.piece_square_tables.tables[colourIndex + chess.KING], color, chess.KING)
+        kingLateGame = self.evaluate_piece_square_table(self.piece_square_tables.tables[15 + (not color)], color, chess.KING)
+        value += kingEarlyGame * (1 - endgameT) + kingLateGame * endgameT
+
+        return value
+
+    def evaluate_piece_square_table(self, table, color, piece):
+        value = 0
+        for square in self.get_board().pieces(piece, color):
+            value += self.piece_square_tables.read(table, color, square)
+            print("adding value: ", self.piece_square_tables.read(table, color, square))
+            print("from piece: ", piece, " at square: ", square, " for color: ", color)
+            print("value: ", value)
+            print("--------------------")
+        return value
+
 
     class EvaluationData:
         def __init__(self):
@@ -101,11 +131,11 @@ class Evaluation:
             self.num_minors = num_bishops + num_knights
 
             self.material_score = (
-                num_pawns * self.PAWN_VALUE
-                + num_knights * self.KNIGHT_VALUE
-                + num_bishops * self.BISHOP_VALUE
-                + num_rooks * self.ROOK_VALUE
-                + num_queens * self.QUEEN_VALUE
+                num_pawns * Evaluation.PAWN_VALUE
+                + num_knights * Evaluation.KNIGHT_VALUE
+                + num_bishops * Evaluation.BISHOP_VALUE
+                + num_rooks * Evaluation.ROOK_VALUE
+                + num_queens * Evaluation.QUEEN_VALUE
             )
 
             queen_endgame_weight = 45
@@ -126,9 +156,4 @@ class Evaluation:
             )
 
             self.endgameT = 1 - min(1, endgame_weight_sum / float(endgame_start_weight))
-
-
-test = chess.Board()
-
-print(len(test.pieces(chess.KNIGHT, chess.WHITE)))
 
