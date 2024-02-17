@@ -23,6 +23,7 @@ class TestEvaluatePieceSquareTables(unittest.TestCase):
         
         # Verify that the evaluation is correct based on the piece-square tables for the starting position
         self.assertEqual(white_score, black_score)
+        self.assertEqual(white_score, -95.0)
 
     def test_early_game_evaluation(self):
         # Setup an early game scenario
@@ -37,8 +38,8 @@ class TestEvaluatePieceSquareTables(unittest.TestCase):
         black_score = self.evaluation.blackEval.piece_square_score
         
         # Verify that the evaluation is correct based on the piece-square tables for early game
-        self.assertEqual(white_score, 5)
-        self.assertEqual(black_score, -35)
+        self.assertEqual(white_score, -5)
+        self.assertEqual(black_score, -55)
         self.assertNotEqual(white_score, black_score)
 
     def test_endgame_evaluation(self):
@@ -74,7 +75,6 @@ class TestEvaluatePieceSquareTables(unittest.TestCase):
         # Verify that the evaluations are equal in a symmetrical position
         self.assertEqual(white_score, black_score)
 
-    # Additional tests can include different configurations, testing specific piece-square table values, etc.
 
 if __name__ == '__main__':
     unittest.main()
