@@ -24,17 +24,6 @@ class PieceSquareTables:
         0,   0,   0,   0,   0,   0,   0,   0
     ]
 
-    ROOKS =  [
-        0,  0,  0,  0,  0,  0,  0,  0,
-        5, 10, 10, 10, 10, 10, 10,  5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        -5,  0,  0,  0,  0,  0,  0, -5,
-        0,  0,  0,  5,  5,  0,  0,  0
-    ]
-
     KNIGHTS = [
         -50,-40,-30,-30,-30,-30,-40,-50,
         -40,-20,  0,  0,  0,  0,-20,-40,
@@ -57,6 +46,17 @@ class PieceSquareTables:
         -20,-10,-10,-10,-10,-10,-10,-20,
     ]
 
+    ROOKS =  [
+        0,  0,  0,  0,  0,  0,  0,  0,
+        5, 10, 10, 10, 10, 10, 10,  5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        -5,  0,  0,  0,  0,  0,  0, -5,
+        0,  0,  0,  5,  5,  0,  0,  0
+    ]
+
     QUEENS = [
         -20,-10,-10, -5, -5,-10,-10,-20,
         -10,  0,  0,  0,  0,  0,  0,-10,
@@ -69,14 +69,14 @@ class PieceSquareTables:
     ]
 
     KINGSTART = [
-        -80, -70, -70, -70, -70, -70, -70, -80, 
-        -60, -60, -60, -60, -60, -60, -60, -60, 
-        -40, -50, -50, -60, -60, -50, -50, -40, 
-        -30, -40, -40, -50, -50, -40, -40, -30, 
-        -20, -30, -30, -40, -40, -30, -30, -20, 
-        -10, -20, -20, -20, -20, -20, -20, -10, 
-        20,  20,  -5,  -5,  -5,  -5,  20,  20, 
-        20,  30,  10,   0,   0,  10,  30,  20
+        -80, -70, -70, -70, -70, -70, -70, -80, # 63
+        -60, -60, -60, -60, -60, -60, -60, -60, # 55
+        -40, -50, -50, -60, -60, -50, -50, -40, # 47
+        -30, -40, -40, -50, -50, -40, -40, -30, # 39
+        -20, -30, -30, -40, -40, -30, -30, -20, # 31
+        -10, -20, -20, -20, -20, -20, -20, -10, # 23
+        20,  20,  -5,  -5,  -5,  -5,  20,  20, # 15
+        20,  30,  10,   0,   0,  10,  30,  20 # 7
     ]
 
     KINGENDGAME = [
@@ -91,7 +91,7 @@ class PieceSquareTables:
     ]
 
     def __init__(self):
-        self.tables = [[] for _ in range(13)]
+        self.tables = [[] for _ in range(17)]
         self.tables[1] = self.PAWNS
         self.tables[2] = self.KNIGHTS
         self.tables[3] = self.BISHOPS
@@ -104,6 +104,10 @@ class PieceSquareTables:
         self.tables[10] = self.flip_table(self.ROOKS)
         self.tables[11] = self.flip_table(self.QUEENS)
         self.tables[12] = self.flip_table(self.KINGSTART)
+        self.tables[13] = self.PAWNSENDGAME
+        self.tables[14] = self.flip_table(self.PAWNSENDGAME)
+        self.tables[15] = self.KINGENDGAME
+        self.tables[16] = self.flip_table(self.KINGENDGAME)
 
     # Flips a piece square table for black pieces
     def flip_table(self, table):
@@ -116,10 +120,24 @@ class PieceSquareTables:
             flippedTable[flippedIdx] = table[idx]
         return flippedTable
 
-    # Reads a value from a piece square table
-    def read(self, table, square, is_white):
-        file = chess.square_file(square)
-        rank = chess.square_rank(square)
-        rank = 7 - rank
-        square = chess.square(file, rank)
-        return table[square]
+    def read(self, table, colour, squareIndex):
+        if colour == chess.WHITE:
+            helper = PieceSquareHelper()
+            file = helper.file_index(squareIndex)
+            rank = helper.rank_index(squareIndex)
+            rank = 7 - rank
+            squareIndex = helper.index_from_coord(file, rank)
+            return table[squareIndex]
+        else:
+            return table[63 - squareIndex]
+
+
+class PieceSquareHelper():
+    def file_index(self, squareIndex):
+        return squareIndex % 8
+
+    def rank_index(self, squareIndex):
+        return squareIndex // 8
+
+    def index_from_coord(self, file, rank):
+        return rank * 8 + file
