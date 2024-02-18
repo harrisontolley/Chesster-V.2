@@ -31,12 +31,24 @@ class Evaluation():
         # calculate material
         whiteMaterialInfo = self.get_material_info(chess.WHITE)
         blackMaterialInfo = self.get_material_info(chess.BLACK)
-
+        
+        # plain material score advantage
         self.whiteEval.material_score = whiteMaterialInfo.material_score
         self.blackEval.material_score = blackMaterialInfo.material_score
-
+        
+        # score based on position of pieces
         self.whiteEval.piece_square_score = self.evaluate_piece_square_tables(chess.WHITE, blackMaterialInfo.endgameT)
         self.blackEval.piece_square_score = self.evaluate_piece_square_tables(chess.BLACK, whiteMaterialInfo.endgameT)
+
+        # mop up score for both colors
+        # encouraging the engine to centralise kings in winning endgames
+        self.whiteEval.mopUpScore = self.mop_up_eval(chess.WHITE, whiteMaterialInfo, blackMaterialInfo)
+        self.blackEval.mopUpScore = self.mop_up_eval(chess.BLACK, blackMaterialInfo, whiteMaterialInfo)
+
+        # evaluate pawn structure for both colors
+        self.whiteEval.pawn_score = self.evaluate_pawns(chess.WHITE)
+        self.blackEval.pawn_score = self.evaluate_pawns(chess.BLACK)
+
 
     def get_material_info(self, color):
         """
@@ -98,7 +110,7 @@ class Evaluation():
         """
         Returns the mop up score for the given color
         """
-        if (myMaterial.material_score > enemyMaterial.material_score + PAWN_VALUE * 2) and enemyMaterial.endgameT > 0:
+        if (myMaterial.material_score > enemyMaterial.material_score + self.PAWN_VALUE * 2) and enemyMaterial.endgameT > 0:
             mopUpScore = 0
 
             if color == chess.WHITE:
@@ -113,6 +125,77 @@ class Evaluation():
             mopUpScore += chess.square_manhattan_distance(chess.D4, enemyKingSquare) * 10
             return mopUpScore * enemyMaterial.endgameT
         return 0
+
+    def evaluate_pawns(self, color):
+        """
+        Returns the pawn score for the given color
+        """
+        value = 0
+        pawns = self.get_board().pieces(chess.PAWN, color)
+
+        num_isolated_pawns = 0
+
+        for pawn_square in pawns:
+            if self.is_passed_pawn(pawn_square, color):
+                # passed pawn bonus
+                if color == chess.WHITE:
+                    value += self.passed_pawn_bonuses[7 - chess.square_rank(pawn_square)]
+                else:
+                    value += self.passed_pawn_bonuses[chess.square_rank(pawn_square)]
+            
+            if self.is_isolated_pawn(pawn_square, color):
+                # isolated pawn penalty
+                num_isolated_pawns += 1
+        
+        value += self.isolated_pawn_penalty_by_count[num_isolated_pawns]
+
+        return value
+    
+    def is_passed_pawn(self, square, color):
+        """
+        Returns True if the pawn on the given square is a passed pawn for the given color
+        """
+        opposing_color = not color
+        pawn_rank = chess.square_rank(square)
+        pawn_file = chess.square_file(square)
+
+        # assume passed unless proven otherwise
+        passed = True
+
+        end_rank = 7 if color == chess.WHITE else 0
+        rank_range = range(pawn_rank + 1, end_rank) if color == chess.WHITE else range(pawn_rank - 1, end_rank, -1)
+
+        # loop through ranks and files to determine if opposing pawn is blocking
+        for rank in rank_range:
+            for file in [pawn_file - 1, pawn_file, pawn_file + 1]:
+                if file >= 0 and file <= 7:
+
+                    target_sqare = chess.square(file, rank)
+                    if self.get_board().piece_at(target_sqare) == chess.Piece(chess.PAWN, opposing_color):
+                        passed = False
+                        break
+            if not passed:
+                break
+        
+        return passed
+
+    def is_isolated_pawn(self, square, color):
+        """
+        Returns True if the pawn on the given square is an isolated pawn for the given color
+        """
+        pawn_file = chess.square_file(square)
+
+        # assume isolated unless proven otherwise
+        isolated = True
+
+        for file in [pawn_file - 1, pawn_file + 1]:
+            if file >= 0 and file <= 7:
+                adjacent_pawn = self.get_board().pieces(chess.PAWN, color) & chess.SquareSet(chess.BB_FILES[file])
+
+                if adjacent_pawn:
+                    isolated = False
+                    break
+        return isolated
 
 
     class EvaluationData:
@@ -156,7 +239,7 @@ class Evaluation():
             self.material_score = (
                 num_pawns * Evaluation.PAWN_VALUE
                 + num_knights * Evaluation.KNIGHT_VALUE
-                + num_bishops * Evaluation.BISHOP_VALUwE
+                + num_bishops * Evaluation.BISHOP_VALUE
                 + num_rooks * Evaluation.ROOK_VALUE
                 + num_queens * Evaluation.QUEEN_VALUE
             )
