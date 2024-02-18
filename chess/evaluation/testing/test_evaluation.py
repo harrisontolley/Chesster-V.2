@@ -74,6 +74,70 @@ class TestEvaluatePieceSquareTables(unittest.TestCase):
         
         # Verify that the evaluations are equal in a symmetrical position
         self.assertEqual(white_score, black_score)
+    
+
+class TestPawnStructureEvaluation(unittest.TestCase):
+    def setUp(self):
+        self.evaluation = Evaluation()
+        self.board = chess.Board()
+
+    def test_isolated_pawn_evaluation(self):
+        # Setup a position with isolated pawns for white
+        self.board.clear()
+        self.board.set_piece_at(chess.E4, chess.Piece(chess.PAWN, chess.WHITE))
+        self.board.set_piece_at(chess.D5, chess.Piece(chess.PAWN, chess.BLACK))
+
+        # Evaluate the position
+        self.evaluation.evaluate(self.board)
+
+        # Expect a specific penalty for the isolated white pawn
+        expected_penalty = self.evaluation.isolated_pawn_penalty_by_count[1]
+        print("Expected penalty: ", expected_penalty)
+        actual_white_pawn_score = self.evaluation.whiteEval.pawn_score
+        print("Actual white pawn score: ", actual_white_pawn_score)
+
+        self.assertEqual(actual_white_pawn_score, expected_penalty, "Isolated pawn penalty not correctly evaluated for white")
+
+    def test_passed_pawn_evaluation(self):
+        # Setup a position with a passed pawn for white
+        self.board.clear()
+        self.board.set_piece_at(chess.D5, chess.Piece(chess.PAWN, chess.WHITE))
+        self.board.set_piece_at(chess.E7, chess.Piece(chess.KING, chess.BLACK))
+        self.board.set_piece_at(chess.E1, chess.Piece(chess.KING, chess.WHITE))
+
+        # Evaluate the position
+        self.evaluation.evaluate(self.board)
+
+        # Expect a specific bonus for the passed white pawn
+        expected_bonus = self.evaluation.passed_pawn_bonuses[3] + self.evaluation.isolated_pawn_penalty_by_count[1]
+        actual_white_pawn_score = self.evaluation.whiteEval.pawn_score
+
+        self.assertEqual(actual_white_pawn_score, expected_bonus, "Passed pawn bonus not correctly evaluated for white")
+
+    def test_multiple_isolated_and_passed_pawns(self):
+        # Setup a position with multiple scenarios
+        self.board.clear()
+        self.board.set_piece_at(chess.A2, chess.Piece(chess.PAWN, chess.WHITE))
+        self.board.set_piece_at(chess.B5, chess.Piece(chess.PAWN, chess.WHITE))  # Passed pawn
+        self.board.set_piece_at(chess.H2, chess.Piece(chess.PAWN, chess.WHITE))  # Isolated pawn
+        self.board.set_piece_at(chess.H7, chess.Piece(chess.PAWN, chess.BLACK))  # Passed pawn
+        self.board.set_piece_at(chess.G7, chess.Piece(chess.PAWN, chess.BLACK))  # Isolated pawn
+
+        # Evaluate the position
+        self.evaluation.evaluate(self.board)
+
+        # Calculate expected scores
+        expected_white_pawn_score = self.evaluation.passed_pawn_bonuses[3] # for the D5 pawn
+        expected_white_pawn_score += self.evaluation.passed_pawn_bonuses[6] # for the B5 pawn
+        expected_white_pawn_score += self.evaluation.isolated_pawn_penalty_by_count[1] # for the H2 isolated pawn
+
+        expected_black_pawn_score = 0
+
+        actual_white_pawn_score = self.evaluation.whiteEval.pawn_score
+        actual_black_pawn_score = self.evaluation.blackEval.pawn_score
+
+        self.assertEqual(actual_white_pawn_score, expected_white_pawn_score, "White pawn structure not correctly evaluated")
+        self.assertEqual(actual_black_pawn_score, expected_black_pawn_score, "Black pawn structure not correctly evaluated")
 
 
 if __name__ == '__main__':
