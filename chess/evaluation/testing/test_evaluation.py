@@ -7,20 +7,21 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from piece_square_tables import PieceSquareTables
 from evaluate import Evaluation
 
+
 class TestEvaluatePieceSquareTables(unittest.TestCase):
     def setUp(self):
         self.evaluation = Evaluation()
         self.board = chess.Board()
-    
+
     def test_starting_position_evaluation(self):
         # Setup the starting position
         self.board.reset()
-        
+
         # Test evaluation for the starting position (e.g., endgameT close to 0)
         self.evaluation.evaluate(self.board)
         white_score = self.evaluation.whiteEval.piece_square_score
         black_score = self.evaluation.blackEval.piece_square_score
-        
+
         # Verify that the evaluation is correct based on the piece-square tables for the starting position
         self.assertEqual(white_score, black_score)
         self.assertEqual(white_score, -95.0)
@@ -31,12 +32,12 @@ class TestEvaluatePieceSquareTables(unittest.TestCase):
         self.board.push_san("e4")
         self.board.push_san("e5")
         self.board.push_san("Nf3")
-        
+
         # Test evaluation for an early game scenario (e.g., endgameT close to 0)
         self.evaluation.evaluate(self.board)
         white_score = self.evaluation.whiteEval.piece_square_score
         black_score = self.evaluation.blackEval.piece_square_score
-        
+
         # Verify that the evaluation is correct based on the piece-square tables for early game
         self.assertEqual(white_score, -5)
         self.assertEqual(black_score, -55)
@@ -47,15 +48,19 @@ class TestEvaluatePieceSquareTables(unittest.TestCase):
         self.board.clear_board()
         self.board.set_piece_at(chess.E7, chess.Piece(chess.KING, chess.WHITE))
         self.board.set_piece_at(chess.D7, chess.Piece(chess.PAWN, chess.WHITE))
-        self.board.set_piece_at(chess.C6, chess.Piece(chess.PAWN, chess.WHITE)) # 135 for white
+        self.board.set_piece_at(
+            chess.C6, chess.Piece(chess.PAWN, chess.WHITE)
+        )  # 135 for white
 
-        self.board.set_piece_at(chess.H5, chess.Piece(chess.KING, chess.BLACK)) # -15 for black
-        
+        self.board.set_piece_at(
+            chess.H5, chess.Piece(chess.KING, chess.BLACK)
+        )  # -15 for black
+
         # Test evaluation for an endgame scenario (e.g., endgameT close to 1)
         self.evaluation.evaluate(self.board)
         white_score = self.evaluation.whiteEval.piece_square_score
         black_score = self.evaluation.blackEval.piece_square_score
-        
+
         # Verify that the evaluation is correct based on the piece-square tables for endgame
         self.assertEqual(white_score, 135.0)
         self.assertEqual(black_score, -20.0)
@@ -66,15 +71,15 @@ class TestEvaluatePieceSquareTables(unittest.TestCase):
         self.board.clear_board()
         self.board.set_piece_at(chess.D4, chess.Piece(chess.QUEEN, chess.WHITE))
         self.board.set_piece_at(chess.D5, chess.Piece(chess.QUEEN, chess.BLACK))
-        
+
         # Evaluate the symmetrical position
         self.evaluation.evaluate(self.board)
         white_score = self.evaluation.whiteEval.piece_square_score
         black_score = self.evaluation.blackEval.piece_square_score
-        
+
         # Verify that the evaluations are equal in a symmetrical position
         self.assertEqual(white_score, black_score)
-    
+
 
 class TestPawnStructureEvaluation(unittest.TestCase):
     def setUp(self):
@@ -96,7 +101,11 @@ class TestPawnStructureEvaluation(unittest.TestCase):
         actual_white_pawn_score = self.evaluation.whiteEval.pawn_score
         print("Actual white pawn score: ", actual_white_pawn_score)
 
-        self.assertEqual(actual_white_pawn_score, expected_penalty, "Isolated pawn penalty not correctly evaluated for white")
+        self.assertEqual(
+            actual_white_pawn_score,
+            expected_penalty,
+            "Isolated pawn penalty not correctly evaluated for white",
+        )
 
     def test_passed_pawn_evaluation(self):
         # Setup a position with a passed pawn for white
@@ -109,36 +118,65 @@ class TestPawnStructureEvaluation(unittest.TestCase):
         self.evaluation.evaluate(self.board)
 
         # Expect a specific bonus for the passed white pawn
-        expected_bonus = self.evaluation.passed_pawn_bonuses[3] + self.evaluation.isolated_pawn_penalty_by_count[1]
+        expected_bonus = (
+            self.evaluation.passed_pawn_bonuses[3]
+            + self.evaluation.isolated_pawn_penalty_by_count[1]
+        )
         actual_white_pawn_score = self.evaluation.whiteEval.pawn_score
 
-        self.assertEqual(actual_white_pawn_score, expected_bonus, "Passed pawn bonus not correctly evaluated for white")
+        self.assertEqual(
+            actual_white_pawn_score,
+            expected_bonus,
+            "Passed pawn bonus not correctly evaluated for white",
+        )
 
     def test_multiple_isolated_and_passed_pawns(self):
         # Setup a position with multiple scenarios
         self.board.clear()
         self.board.set_piece_at(chess.A2, chess.Piece(chess.PAWN, chess.WHITE))
-        self.board.set_piece_at(chess.B5, chess.Piece(chess.PAWN, chess.WHITE))  # Passed pawn
-        self.board.set_piece_at(chess.H2, chess.Piece(chess.PAWN, chess.WHITE))  # Isolated pawn
-        self.board.set_piece_at(chess.H7, chess.Piece(chess.PAWN, chess.BLACK))  # Passed pawn
-        self.board.set_piece_at(chess.G7, chess.Piece(chess.PAWN, chess.BLACK))  # Isolated pawn
+        self.board.set_piece_at(
+            chess.B5, chess.Piece(chess.PAWN, chess.WHITE)
+        )  # Passed pawn
+        self.board.set_piece_at(
+            chess.H2, chess.Piece(chess.PAWN, chess.WHITE)
+        )  # Isolated pawn
+        self.board.set_piece_at(
+            chess.H7, chess.Piece(chess.PAWN, chess.BLACK)
+        )  # Passed pawn
+        self.board.set_piece_at(
+            chess.G7, chess.Piece(chess.PAWN, chess.BLACK)
+        )  # Isolated pawn
 
         # Evaluate the position
         self.evaluation.evaluate(self.board)
 
         # Calculate expected scores
-        expected_white_pawn_score = self.evaluation.passed_pawn_bonuses[3] # for the D5 pawn
-        expected_white_pawn_score += self.evaluation.passed_pawn_bonuses[6] # for the B5 pawn
-        expected_white_pawn_score += self.evaluation.isolated_pawn_penalty_by_count[1] # for the H2 isolated pawn
+        expected_white_pawn_score = self.evaluation.passed_pawn_bonuses[
+            3
+        ]  # for the D5 pawn
+        expected_white_pawn_score += self.evaluation.passed_pawn_bonuses[
+            6
+        ]  # for the B5 pawn
+        expected_white_pawn_score += self.evaluation.isolated_pawn_penalty_by_count[
+            1
+        ]  # for the H2 isolated pawn
 
         expected_black_pawn_score = 0
 
         actual_white_pawn_score = self.evaluation.whiteEval.pawn_score
         actual_black_pawn_score = self.evaluation.blackEval.pawn_score
 
-        self.assertEqual(actual_white_pawn_score, expected_white_pawn_score, "White pawn structure not correctly evaluated")
-        self.assertEqual(actual_black_pawn_score, expected_black_pawn_score, "Black pawn structure not correctly evaluated")
+        self.assertEqual(
+            actual_white_pawn_score,
+            expected_white_pawn_score,
+            "White pawn structure not correctly evaluated",
+        )
+        self.assertEqual(
+            actual_black_pawn_score,
+            expected_black_pawn_score,
+            "Black pawn structure not correctly evaluated",
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
