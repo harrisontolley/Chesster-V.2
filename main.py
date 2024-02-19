@@ -28,6 +28,7 @@ def main():
         print(board)
         if board.turn == user_color:
             move_san = input("Enter your move: ")
+            print(board.legal_moves)
             try:
                 move = board.parse_san(move_san)
                 if move in board.legal_moves:
@@ -39,9 +40,12 @@ def main():
                 continue
         else:
             print("Bot is thinking...")
-            move = search.basic_search(board)
-            board.push(move)
-            print(f"Bot plays: {move.uci()}")
+            _, move = search.minimax(board, 5, board.turn == bot_color)
+            if move:
+                board.push(move)
+                print(f"Bot plays: {move.uci()}")
+            else:
+                print("No valid move found by bot.")
 
     # Game result
     print(f"Game over. Result: {board.result()}")
