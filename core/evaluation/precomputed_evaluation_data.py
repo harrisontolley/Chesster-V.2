@@ -33,6 +33,3 @@ class PrecomputedEvaluationData:
 
             PrecomputedEvaluationData.PawnShieldSquaresWhite[squareIndex] = white_shield
             PrecomputedEvaluationData.PawnShieldSquaresBlack[squareIndex] = black_shield
-
-
-PrecomputedEvaluationData.create_pawn_shield()
