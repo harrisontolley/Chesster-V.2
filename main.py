@@ -1,6 +1,7 @@
 import chess
 from core.evaluation import Evaluation
 from core.search.search import Search
+import time
 
 
 def main():
@@ -40,7 +41,10 @@ def main():
                 continue
         else:
             print("Bot is thinking...")
+            start = time.time()
             _, move = search.minimax(board, 5, board.turn == bot_color)
+            end = time.time()
+            print(f"Time taken: {end - start:.2f}s")
             if move:
                 board.push(move)
                 print(f"Bot plays: {move.uci()}")
