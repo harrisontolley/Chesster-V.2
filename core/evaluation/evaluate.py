@@ -1,6 +1,5 @@
 import chess
-from piece_square_tables import PieceSquareTables
-from precomputed_evaluation_data import PrecomputedEvaluationData
+from .piece_square_tables import PieceSquareTables
 
 
 class Evaluation:
@@ -20,6 +19,7 @@ class Evaluation:
         self.board = None  # Placeholder for board instance
         self.whiteEval = self.EvaluationData()
         self.blackEval = self.EvaluationData()
+
         self.piece_square_tables = PieceSquareTables()
 
     def get_board(self):
