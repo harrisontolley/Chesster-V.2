@@ -1,3 +1,3 @@
-from .evaluate import Evaluation
+from .precomputed_evaluation_data import PrecomputedEvaluationData
 
-# from .piece_square_tables import PieceSquareTables
+from .evaluate import Evaluation
