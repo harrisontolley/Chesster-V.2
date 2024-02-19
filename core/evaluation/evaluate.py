@@ -1,5 +1,6 @@
 import chess
 from .piece_square_tables import PieceSquareTables
+from .precomputed_evaluation_data import PrecomputedEvaluationData
 
 
 class Evaluation:
@@ -290,24 +291,18 @@ class Evaluation:
 
         if king_file <= 2 or king_file >= 5:
             squares = (
-                self.piece_square_tables.PawnShieldSquaresWhite[king_square]
+                PrecomputedEvaluationData.PawnShieldSquaresWhite[king_square]
                 if is_white
-                else self.piece_square_tables.PawnShieldSquaresBlack[king_square]
+                else PrecomputedEvaluationData.PawnShieldSquaresBlack[king_square]
             )
 
-            for i, shield_square in enumerate(shield_squares // 2):
-
+            for i, shield_square in enumerate(squares):
                 if self.get_board().piece_at(shield_square) != friendly_pawn:
+                    penalty += self.king_pawn_shield_scores[
+                        min(i, len(self.king_pawn_shield_scores) - 1)
+                    ]  # Apply penalty based on shield position
 
-                    if len(shield_squares) > 3 and self.get_board().piece_at(
-                        shield_squares[i + 3] == friendly_pawn
-                    ):
-                        penalty += king_pawn_shield_scores[i + 3]
-
-                else:
-                    penalty += king_pawn_shield_scores[i]
-
-            penalty *= penalty
+            penalty = penalty**2
 
         else:
             enemy_development_score = max(
