@@ -16,6 +16,8 @@ class Evaluation:
 
     endgame_material_start = ROOK_VALUE * 2 + BISHOP_VALUE + KNIGHT_VALUE
 
+    CHECKMATE_SCORE = 999999999999
+
     def __init__(self):
         self.board = None  # Placeholder for board instance
         self.whiteEval = self.EvaluationData()
@@ -27,6 +29,23 @@ class Evaluation:
         return self.board
 
     def evaluate(self, board):
+        if board.is_checkmate():
+            # Return a positive score if the opponent is checkmated,
+            # negative if the side to move is checkmated
+            return (
+                Evaluation.CHECKMATE_SCORE
+                if board.turn == chess.WHITE
+                else -Evaluation.CHECKMATE_SCORE
+            )
+        elif (
+            board.is_stalemate()
+            or board.is_insufficient_material()
+            or board.is_seventyfive_moves()
+            or board.is_fivefold_repetition()
+        ):
+            # Return 0 for a draw
+            return 0
+
         self.board = board
         self.whiteEval = self.EvaluationData()
         self.blackEval = self.EvaluationData()
@@ -49,10 +68,10 @@ class Evaluation:
 
         # mop up score for both colors
         # encouraging the engine to centralise kings in winning endgames
-        self.whiteEval.mopUpScore = self.mop_up_eval(
+        self.whiteEval.mop_up_score = self.mop_up_eval(
             chess.WHITE, whiteMaterialInfo, blackMaterialInfo
         )
-        self.blackEval.mopUpScore = self.mop_up_eval(
+        self.blackEval.mop_up_score = self.mop_up_eval(
             chess.BLACK, blackMaterialInfo, whiteMaterialInfo
         )
 
@@ -129,7 +148,8 @@ class Evaluation:
         pawnsLateGame = self.evaluate_piece_square_table(
             self.piece_square_tables.tables[13 + (not color)], color, chess.PAWN
         )
-        value += pawnEarlyGame * (1 - endgameT) + pawnsLateGame * endgameT
+        value += int(pawnEarlyGame * (1 - endgameT))
+        value += int(pawnsLateGame * endgameT)
 
         kingEarlyGame = self.evaluate_piece_square_table(
             self.piece_square_tables.tables[colourIndex + chess.KING], color, chess.KING
@@ -137,7 +157,9 @@ class Evaluation:
         kingLateGame = self.evaluate_piece_square_table(
             self.piece_square_tables.tables[15 + (not color)], color, chess.KING
         )
-        value += kingEarlyGame * (1 - endgameT) + kingLateGame * endgameT
+
+        value += int(kingEarlyGame * (1 - endgameT))
+        value += int(kingLateGame * endgameT)
 
         return value
 
@@ -183,7 +205,8 @@ class Evaluation:
             mopUpScore += (
                 chess.square_manhattan_distance(chess.D4, enemyKingSquare) * 10
             )
-            return mopUpScore * enemyMaterial.endgameT
+
+            return int(mopUpScore * enemyMaterial.endgameT)
         return 0
 
     def evaluate_pawns(self, color):
