@@ -203,7 +203,7 @@ class Evaluation:
             # Centralise the king in the endgame
             mopUpScore += (
                 self.precomputed_move_data.centre_manhattan_distance[enemyKingSquare]
-                * 4
+                * 10
             )
 
             return int(mopUpScore * enemyMaterial.endgameT)
