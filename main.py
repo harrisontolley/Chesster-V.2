@@ -56,28 +56,12 @@ import time
 
 
 def main():
-
-    # board = chess.Board("8/8/8/8/3K4/2Q5/k7/8 w - - 0 1")
-    # eval = Evaluation()
-
-    # for move in board.legal_moves:
-    #     board.push(move)
-    #     print(board.fen(), eval.evaluate(board), move)
-    #     print("EVAL STATISTICS")
-    #     print(f"Material Score: {eval.whiteEval.material_score}")
-    #     print(f"Mop Up Score: {eval.whiteEval.mop_up_score}")
-    #     print(f"Piece Square Score: {eval.whiteEval.piece_square_score}")
-    #     print(f"Pawn Score: {eval.whiteEval.pawn_score}")
-    #     print("Pawn Shield Score: ", eval.whiteEval.pawn_shield_score)
-    #     print()
-    #     board.pop()
-
-    board = chess.Board("8/8/8/8/3K4/2Q5/k7/8 w - - 0 1")
-
+    board = chess.Board()
     search = Search()
 
     # Game loop for bot vs. bot
     move_count = 0  # Just to track the number of moves
+    total_time = 0
     while not board.is_game_over():
         print(board)
         print("Bot is thinking...")
@@ -89,14 +73,17 @@ def main():
         if move:
             board.push(move)
             move_count += 1
+            total_time += end - start
             print(f"Move {move_count}: {move.uci()} | Time taken: {end - start:.2f}s")
         else:
             print("No valid move found by bot.")
             break
 
     # Game result
+    average_time_per_move = total_time / move_count if move_count else 0
     print(f"Game over. Result: {board.result()}")
     print(f"Total moves: {move_count}")
+    print(f"Average time per move: {average_time_per_move:.2f}s")
     print(f"Board fen: {board.fen()}")
 
 
