@@ -1,6 +1,7 @@
 import chess
 from .piece_square_tables import PieceSquareTables
 from .precomputed_evaluation_data import PrecomputedEvaluationData
+from .precomputed_move_data import PrecomputedMoveData
 
 
 class Evaluation:
@@ -24,6 +25,7 @@ class Evaluation:
         self.blackEval = self.EvaluationData()
 
         self.piece_square_tables = PieceSquareTables()
+        self.precomputed_move_data = PrecomputedMoveData()
 
     def get_board(self):
         return self.board
@@ -169,13 +171,6 @@ class Evaluation:
             value += self.piece_square_tables.read(table, color, square)
         return value
 
-    def edge_distance(self, square):
-        """
-        Returns the distance from a square to the edge of the board
-        """
-        rank, file = divmod(square, 8)
-        return min(rank, 7 - rank, file, 7 - file)
-
     def mop_up_eval(
         self,
         color,
@@ -199,11 +194,16 @@ class Evaluation:
                 enemyKingSquare = self.get_board().king(chess.WHITE)
 
             mopUpScore += (
-                14 - chess.square_distance(friendlyKingSquare, enemyKingSquare)
+                14
+                - self.precomputed_move_data.orthogonal_distance[friendlyKingSquare][
+                    enemyKingSquare
+                ]
             ) * 4
 
+            # Centralise the king in the endgame
             mopUpScore += (
-                chess.square_manhattan_distance(chess.D4, enemyKingSquare) * 10
+                self.precomputed_move_data.centre_manhattan_distance[enemyKingSquare]
+                * 4
             )
 
             return int(mopUpScore * enemyMaterial.endgameT)
