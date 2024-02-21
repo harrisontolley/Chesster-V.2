@@ -2,7 +2,7 @@ import chess
 from core.evaluation import Evaluation
 from core.search.search import Search
 import time
-
+import requests
 
 # def main():
 #     board = chess.Board()
@@ -55,6 +55,23 @@ import time
 #     print(f"Game over. Result: {board.result()}")
 
 
+def get_best_move_from_api(fen):
+    url = "http://tablebase.lichess.ovh/standard"  # table base api
+    params = {"fen": fen.replace(" ", "_")}
+    response = requests.get(url, params=params)
+    if response.ok:
+        data = response.json()
+        if "moves" in data and data["moves"]:
+            best_move_uci = data["moves"][0]["uci"]
+            return best_move_uci
+        else:
+            print("No moves available or not a tablebase position.")
+            return None
+    else:
+        print("Error:", response.status_code)
+        return None
+
+
 def main():
     board = chess.Board()
     search = Search()
@@ -62,12 +79,21 @@ def main():
     # Game loop for bot vs. bot
     move_count = 0  # Just to track the number of moves
     total_time = 0
+    print(board)
     while not board.is_game_over():
-        print(board)
         print("Bot is thinking...")
         start = time.time()
 
-        _, move = search.minimax(board, 3, board.turn == chess.WHITE)
+        if len(board.piece_map()) <= 7:
+            best_move_uci = get_best_move_from_api(board.fen())
+            if best_move_uci:
+                move = chess.Move.from_uci(best_move_uci)
+            else:
+                print("Failed to retrieve tablebase information.")
+
+        if move is None:  # If tablebase move is not available
+            _, move = search.minimax(board, 2, board.turn == chess.WHITE)
+
         end = time.time()
 
         if move:
@@ -78,6 +104,8 @@ def main():
         else:
             print("No valid move found by bot.")
             break
+
+        print(board)
 
     # Game result
     average_time_per_move = total_time / move_count if move_count else 0
