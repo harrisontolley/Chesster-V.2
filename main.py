@@ -55,7 +55,7 @@ import requests
 #     print(f"Game over. Result: {board.result()}")
 
 
-def get_best_move_from_api(fen):
+def query_tablebase(fen):  # Query the tablebase when 7 pieces or less
     url = "http://tablebase.lichess.ovh/standard"  # table base api
     params = {"fen": fen.replace(" ", "_")}
     response = requests.get(url, params=params)
@@ -83,16 +83,17 @@ def main():
     while not board.is_game_over():
         print("Bot is thinking...")
         start = time.time()
+        move = None
 
         if len(board.piece_map()) <= 7:
-            best_move_uci = get_best_move_from_api(board.fen())
+            best_move_uci = query_tablebase(board.fen())
             if best_move_uci:
                 move = chess.Move.from_uci(best_move_uci)
             else:
                 print("Failed to retrieve tablebase information.")
 
         if move is None:  # If tablebase move is not available
-            _, move = search.minimax(board, 2, board.turn == chess.WHITE)
+            _, move = search.minimax(board, 5, board.turn == chess.WHITE)
 
         end = time.time()
 
