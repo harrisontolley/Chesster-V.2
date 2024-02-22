@@ -93,7 +93,7 @@ def main():
                 print("Failed to retrieve tablebase information.")
 
         if move is None:  # If tablebase move is not available
-            _, move = search.minimax(board, 5, board.turn == chess.WHITE)
+            _, move = search.minimax(board, 4, board.turn == chess.WHITE)
 
         end = time.time()
 
@@ -113,6 +113,7 @@ def main():
     print(f"Game over. Result: {board.result()}")
     print(f"Total moves: {move_count}")
     print(f"Average time per move: {average_time_per_move:.2f}s")
+    print(f"Transposition table hits: {search.tt_hits}")
     print(f"Board fen: {board.fen()}")
 
 
