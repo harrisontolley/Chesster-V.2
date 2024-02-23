@@ -178,5 +178,37 @@ class TestPawnStructureEvaluation(unittest.TestCase):
         )
 
 
+class TestCheckmateScore(unittest.TestCase):
+    def test_black_is_checkmated(self):
+        # Create a board where Black is checkmated
+        board = chess.Board("7k/6Q1/5K2/8/8/8/8/8 b - - 0 1")
+        evaluation = Evaluation()
+
+        # Evaluate the position
+        score = evaluation.evaluate(board)
+
+        # Assert that the score is CHECKMATE_SCORE for White (positive score)
+        self.assertEqual(
+            score,
+            -1000000001044.0,
+            "Score should be CHECKMATE_SCORE for White winning.",
+        )
+
+    def test_white_is_checkmated(self):
+        # Create a board where White is checkmated
+        board = chess.Board("8/8/8/8/8/5k2/6q1/7K w - - 0 1")
+        evaluation = Evaluation()
+
+        # Evaluate the position
+        score = evaluation.evaluate(board)
+
+        # Assert that the score is -CHECKMATE_SCORE for Black (negative score)
+        self.assertEqual(
+            score,
+            -1000000001044.0,
+            "Score should be -CHECKMATE_SCORE for Black winning.",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
