@@ -31,22 +31,22 @@ class Evaluation:
         return self.board
 
     def evaluate(self, board):
-        if board.is_checkmate():
-            # Return a positive score if the opponent is checkmated,
-            # negative if the side to move is checkmated
-            return (
-                Evaluation.CHECKMATE_SCORE
-                if board.turn == chess.WHITE
-                else -Evaluation.CHECKMATE_SCORE
-            )
-        elif (
-            board.is_stalemate()
-            or board.is_insufficient_material()
-            or board.is_seventyfive_moves()
-            or board.is_fivefold_repetition()
-        ):
-            # Return 0 for a draw
-            return 0
+        # if board.is_checkmate():
+        #     # Return a positive score if the opponent is checkmated,
+        #     # negative if the side to move is checkmated
+        #     return (
+        #         Evaluation.CHECKMATE_SCORE
+        #         if board.turn == chess.WHITE
+        #         else -Evaluation.CHECKMATE_SCORE
+        #     )
+        # elif (
+        #     board.is_stalemate()
+        #     or board.is_insufficient_material()
+        #     or board.is_seventyfive_moves()
+        #     or board.is_fivefold_repetition()
+        # ):
+        #     # Return 0 for a draw
+        #     return 0
 
         self.board = board
         self.whiteEval = self.EvaluationData()
@@ -88,6 +88,13 @@ class Evaluation:
         self.blackEval.pawn_shield_score = self.evaluate_king_pawn_shield(
             chess.BLACK, whiteMaterialInfo, self.whiteEval.piece_square_score
         )
+
+        # checkmate score
+        if board.is_checkmate():
+            if board.turn == chess.WHITE:
+                self.blackEval.checkmate_score = Evaluation.CHECKMATE_SCORE
+            else:
+                self.whiteEval.checkmate_score = Evaluation.CHECKMATE_SCORE
 
         if board.turn == chess.WHITE:
             perspective = 1
@@ -163,13 +170,13 @@ class Evaluation:
         value += int(kingEarlyGame * (1 - endgameT))
         value += int(kingLateGame * endgameT)
 
-        return value
+        return int(value)
 
     def evaluate_piece_square_table(self, table, color, piece):
         value = 0
         for square in self.get_board().pieces(piece, color):
             value += self.piece_square_tables.read(table, color, square)
-        return value
+        return int(value)
 
     def mop_up_eval(
         self,
@@ -234,7 +241,7 @@ class Evaluation:
 
         value += self.isolated_pawn_penalty_by_count[num_isolated_pawns]
 
-        return value
+        return int(value)
 
     def is_passed_pawn(self, square, color):
         """
@@ -268,7 +275,7 @@ class Evaluation:
             if not passed:
                 break
 
-        return passed
+        return int(passed)
 
     def is_isolated_pawn(self, square, color):
         """
@@ -288,7 +295,7 @@ class Evaluation:
                 if adjacent_pawn:
                     isolated = False
                     break
-        return isolated
+        return int(isolated)
 
     def evaluate_king_pawn_shield(
         self, color, enemy_material: "Evaluation.MaterialInfo", enemy_piece_square_score
@@ -358,8 +365,9 @@ class Evaluation:
             pawn_shield_weight *= 0.6
 
         return (
-            -penalty - uncastled_king_penalty - open_file_against_king_penalty
-        ) * pawn_shield_weight
+            int(-penalty - uncastled_king_penalty - open_file_against_king_penalty)
+            * pawn_shield_weight
+        )
 
     class EvaluationData:
         def __init__(self):
@@ -368,6 +376,7 @@ class Evaluation:
             self.piece_square_score = 0
             self.pawn_score = 0
             self.pawn_shield_score = 0
+            self.checkmate_score = 0
 
         def sum(self):
             return (
@@ -376,6 +385,7 @@ class Evaluation:
                 + self.piece_square_score
                 + self.pawn_score
                 + self.pawn_shield_score
+                + self.checkmate_score
             )
 
     class MaterialInfo:
