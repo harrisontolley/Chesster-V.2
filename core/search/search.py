@@ -1,66 +1,73 @@
 import chess
-import time
-import random
 from ..evaluation.evaluate import Evaluation
 from .transposition_table import TranspositionTable
 
 
 class Search:
-    posInf = 999999999999
-    negInf = -posInf
-
     def __init__(self):
         self.eval = Evaluation()
-        self.board = None
-        self.transposition_table = TranspositionTable()
-        self.tt_hits = 0  # track the number of times the transposition table is used for performance evaluation
+        self.posInf = (
+            Evaluation.CHECKMATE_SCORE
+        )  # Assuming CHECKMATE_SCORE is a large positive number representing checkmate
+        self.negInf = -self.posInf
+        self.tt = TranspositionTable()
 
-    def minimax(
-        self, board, depth, is_maximizing, alpha=-float("inf"), beta=float("inf")
-    ):
-        current_hash = self.transposition_table.generate_initial_hash(board)
+    def order_moves(self, board):
+        scored_moves = []
+        for move in board.legal_moves:
+            score = 0
+            # Score capturing moves
+            if board.is_capture(move):
+                capture_piece_type = board.piece_type_at(move.to_square)
+                move_piece_type = board.piece_type_at(move.from_square)
+                score += 10 * (
+                    self.get_piece_value(capture_piece_type)
+                    - self.get_piece_value(move_piece_type)
+                )
+            # Score promoting a pawn
+            if move.promotion:
+                score += 9 * self.get_piece_value(
+                    move.promotion
+                )  # Queen promotion is most common
 
-        # Use the transposition table for pruning, not for directly returning moves
-        if current_hash in self.transposition_table.table:
-            self.tt_hits += 1
-            stored_score = self.transposition_table.table[current_hash]
-            if is_maximizing and stored_score <= alpha:
-                return stored_score, None  # Prune
-            if not is_maximizing and stored_score >= beta:
-                return stored_score, None  # Prune
+            scored_moves.append((score, move))
 
-        if depth == 0 or board.is_game_over():
-            score = self.eval.evaluate(board)
-            self.transposition_table.table[current_hash] = score
-            return score, None
+        # Sort moves based on score, highest first
+        scored_moves.sort(reverse=True, key=lambda x: x[0])
 
-        if is_maximizing:
-            max_eval = self.negInf
-            best_move = None
-            for move in board.legal_moves:
-                board.push(move)
-                eval, _ = self.minimax(board, depth - 1, False, alpha, beta)
-                board.pop()
-                if eval > max_eval:
-                    max_eval = eval
-                    best_move = move
-                alpha = max(alpha, eval)
-                if beta <= alpha:
-                    break
-            # Optionally update the transposition table here
-            return max_eval, best_move
-        else:
-            min_eval = self.posInf
-            best_move = None
-            for move in board.legal_moves:
-                board.push(move)
-                eval, _ = self.minimax(board, depth - 1, True, alpha, beta)
-                board.pop()
-                if eval < min_eval:
-                    min_eval = eval
-                    best_move = move
-                beta = min(beta, eval)
-                if beta <= alpha:
-                    break
-            # Optionally update the transposition table here
-            return min_eval, best_move
+        # Return a list of moves, ordered by score
+        ordered_moves = [move for _, move in scored_moves]
+        return ordered_moves
+
+    def get_piece_value(self, piece_type):
+        if piece_type == chess.PAWN:
+            return Evaluation.PAWN_VALUE
+        if piece_type == chess.KNIGHT:
+            return Evaluation.KNIGHT_VALUE
+        if piece_type == chess.BISHOP:
+            return Evaluation.BISHOP_VALUE
+        if piece_type == chess.ROOK:
+            return Evaluation.ROOK_VALUE
+        if piece_type == chess.QUEEN:
+            return Evaluation.QUEEN_VALUE
+        return 0
+
+    def minimax(self, board, depth, alpha, beta):
+        if depth == 0:
+            return self.eval.evaluate(board)
+
+        legal_moves = self.order_moves(board)
+        if len(legal_moves) == 0:
+            if board.is_checkmate() or board.is_check():
+                return self.negInf
+            return 0
+
+        for move in legal_moves:
+            board.push(move)
+            eval = -self.minimax(board, depth - 1, -beta, -alpha)
+            board.pop()
+            if eval >= beta:
+                return beta
+            alpha = max(alpha, eval)
+
+        return alpha
