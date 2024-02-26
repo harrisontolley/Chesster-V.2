@@ -42,7 +42,7 @@ def main():
         for move in legal_moves:
             board.push(move)
             # Notice how we don't flip the comparison based on the turn
-            score = -search.minimax(board, 2, -search.posInf, -search.negInf)
+            score = -search.minimax(board, 2, -100000, -100000)
             board.pop()
 
             if score > best_score:  # This is now consistent for both colors
