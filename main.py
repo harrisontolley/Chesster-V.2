@@ -23,7 +23,7 @@ def query_tablebase(fen):  # Query the tablebase when 7 pieces or less
 
 
 def main():
-    board = chess.Board("r1b1r3/1pqp1p1N/6p1/1p1p1kQ1/3P4/P7/1PP2PPP/R4RK1 b - - 9 21")
+    board = chess.Board()
     search = Search()
 
     move_count = 0  # Just to track the number of moves
@@ -33,22 +33,7 @@ def main():
         print("Bot is thinking...")
         start = time.time()
 
-        # Use the minimax function to decide on the best move
-        best_score = search.negInf  # Start with worst possible score
-        best_move = None
-
-        # Generate ordered moves for better pruning
-        legal_moves = search.order_moves(board)
-        for move in legal_moves:
-            board.push(move)
-            # Notice how we don't flip the comparison based on the turn
-            score = -search.minimax(board, 3, -1000000, 1000000)
-            board.pop()
-
-            if score > best_score:  # This is now consistent for both colors
-                print("Best move updated")
-                best_score = score
-                best_move = move
+        best_move = search.search(board, 2)
 
         end = time.time()
 

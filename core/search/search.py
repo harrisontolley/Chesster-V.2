@@ -52,6 +52,20 @@ class Search:
             return Evaluation.QUEEN_VALUE
         return 0
 
+    def search(self, board, depth):
+        legal_moves = self.order_moves(board)
+        best_move = None
+        best_score = self.negInf
+        for move in legal_moves:
+            board.push(move)
+            score = -self.minimax(board, depth, -1000000, 1000000)
+            board.pop()
+
+            if score > best_score:
+                best_score = score
+                best_move = move
+        return best_move
+
     def minimax(self, board, depth, alpha, beta):
         if depth == 0:
             return self.eval.evaluate(board)
