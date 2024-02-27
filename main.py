@@ -33,18 +33,27 @@ def main():
         print("Bot is thinking...")
         start = time.time()
 
-        best_move = search.search(board, 2)
+        if (
+            board.piece_map().__len__() <= 7
+        ):  # Query the tablebase when 7 pieces or less
+            fen = board.fen()
+            best_move = query_tablebase(fen)
+        else:
+            best_move = search.search(board, 4)
 
         end = time.time()
 
         # Make the best move
         if best_move:
-            board.push(best_move)
+            move = (
+                chess.Move.from_uci(best_move)
+                if isinstance(best_move, str)
+                else best_move
+            )
+            board.push(move)
             move_count += 1
             total_time += end - start
-            print(
-                f"Move {move_count}: {best_move.uci()} | Time taken: {end - start:.2f}s"
-            )
+            print(f"Move {move_count}: {move.uci()} | Time taken: {end - start:.2f}s")
         else:
             print("No valid move found by bot.")
             break

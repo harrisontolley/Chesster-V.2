@@ -1,14 +1,13 @@
 import chess
 from ..evaluation.evaluate import Evaluation
 from .transposition_table import TranspositionTable
+import copy
 
 
 class Search:
     def __init__(self):
         self.eval = Evaluation()
-        self.posInf = (
-            Evaluation.CHECKMATE_SCORE
-        )  # Assuming CHECKMATE_SCORE is a large positive number representing checkmate
+        self.posInf = Evaluation.CHECKMATE_SCORE
         self.negInf = -self.posInf
         self.tt = TranspositionTable()
 
@@ -53,35 +52,42 @@ class Search:
         return 0
 
     def search(self, board, depth):
-        legal_moves = self.order_moves(board)
+        board_hash = self.tt.generate_initial_hash(board)  # Initialize board hash
         best_move = None
         best_score = self.negInf
+        legal_moves = self.order_moves(board)
         for move in legal_moves:
+            board_before_move = copy.deepcopy(board)
             board.push(move)
-            score = -self.minimax(board, depth, -1000000, 1000000)
+            new_hash = self.tt.update_hash(board_hash, move, board_before_move, board)
+            score = -self.minimax(board, depth - 1, -1000000, 1000000, new_hash)
             board.pop()
-
             if score > best_score:
                 best_score = score
                 best_move = move
         return best_move
 
-    def minimax(self, board, depth, alpha, beta):
-        if depth == 0:
-            return self.eval.evaluate(board)
+    def minimax(self, board, depth, alpha, beta, board_hash):
+        # Check transposition table first
+        if board_hash in self.tt.table:
+            return self.tt.table[board_hash]
+
+        if depth == 0 or board.is_game_over():
+            score = self.eval.evaluate(board)
+            self.tt.table[board_hash] = score
+            return score
 
         legal_moves = self.order_moves(board)
-        if len(legal_moves) == 0:
-            if board.is_checkmate() or board.is_check():
-                return self.negInf
-            return 0
-
         for move in legal_moves:
+            board_before_move = copy.deepcopy(board)
             board.push(move)
-            eval = -self.minimax(board, depth - 1, -beta, -alpha)
+            new_hash = self.tt.update_hash(board_hash, move, board_before_move, board)
+            score = -self.minimax(board, depth - 1, -beta, -alpha, new_hash)
             board.pop()
-            if eval >= beta:
+            if score >= beta:
+                self.tt.table[board_hash] = beta  # Store cutoff score
                 return beta
-            alpha = max(alpha, eval)
-
+            if score > alpha:
+                alpha = score
+        self.tt.table[board_hash] = alpha  # Store exact score or best score found
         return alpha
