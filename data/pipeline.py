@@ -44,7 +44,7 @@ def process_file(input_path, output_path):
 
 def process_all_files(input_folder, output_folder):
     for filename in os.listdir(input_folder):
-        if filename.endswith(".plain"):
+        if filename.endswith("depth3.plain"):
             input_path = os.path.join(input_folder, filename)
             output_filename = filename.replace(".plain", ".txt")
             output_path = os.path.join(output_folder, output_filename)

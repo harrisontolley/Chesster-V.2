@@ -39,7 +39,7 @@ def main():
             fen = board.fen()
             best_move = query_tablebase(fen)
         else:
-            best_move = search.search(board, 4)
+            best_move = search.search(board, 3)
 
         end = time.time()
 
