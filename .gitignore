@@ -180,6 +180,8 @@ data/pipe/marlinflow/*
 data/pipe/plain/*
 data/binpacks/*
 data/bin/*
+data/batches_data.pkl
+data/*.txt
 data/batches/*
 stockfish/*
 stockfish-tools/*
